@@ -1,10 +1,10 @@
 import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 import { promisify } from 'util';
-const COGNITO_JWKS_URL = process.env.COGNITO_JWKS_URL;
+const AUTH0_JWKS_URL = process.env.AUTH0_JWKS_URL;
 
 const client = jwksClient({
-    jwksUri: COGNITO_JWKS_URL,
+    jwksUri: AUTH0_JWKS_URL,
     cache: true
 });
 
@@ -25,7 +25,7 @@ export const handler = async (event) => {
         const jwtString = authHeader.split(' ')[1];
         const claims = await verifyJwt(jwtString, getKey, { algorithms: ['RS256'] });
         // console.log({ claims });
-        const principalId = `${claims.sub}|${claims.username}`;
+        const principalId = `${claims.sub}`;
         return generatePolicy('Allow', event.methodArn, principalId);
     } catch (e) {
         console.error(`Failed to parse authorization header: ${e}`);

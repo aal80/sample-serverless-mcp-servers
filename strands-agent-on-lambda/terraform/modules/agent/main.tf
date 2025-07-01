@@ -33,10 +33,11 @@ resource "aws_lambda_function" "travel_agent" {
 
   environment {
     variables = {
-      MCP_ENDPOINT         = var.mcp_endpoint
-      JWT_SIGNATURE_SECRET = var.jwt_signature_secret
-      STATE_TABLE_NAME     = aws_dynamodb_table.agent_state_table.name
-      COGNITO_JWKS_URL     = var.cognito_jwks_url
+      MCP_ENDPOINT                     = var.mcp_endpoint
+      JWT_SIGNATURE_SECRET             = var.jwt_signature_secret
+      STATE_TABLE_NAME                 = aws_dynamodb_table.agent_state_table.name
+      AUTH0_JWKS_URL                   = var.auth0_jwks_url
+      AUTH0_RESOURCE_SERVER_IDENTIFIER = var.auth0_resource_server_identifier
     }
   }
 }
@@ -61,7 +62,8 @@ resource "aws_lambda_function" "agent_authorizer" {
 
   environment {
     variables = {
-      COGNITO_JWKS_URL = var.cognito_jwks_url
+      AUTH0_JWKS_URL = var.auth0_jwks_url
+      AUTH0_RESOURCE_SERVER_IDENTIFIER = var.auth0_resource_server_identifier
     }
   }
 }
@@ -101,7 +103,7 @@ resource "aws_api_gateway_integration" "agent_integration" {
 }
 
 resource "aws_api_gateway_deployment" "agent_deployment" {
-  depends_on = [aws_api_gateway_integration.agent_integration]
+  depends_on  = [aws_api_gateway_integration.agent_integration]
   rest_api_id = aws_api_gateway_rest_api.agent_api.id
 
   lifecycle {
@@ -109,12 +111,12 @@ resource "aws_api_gateway_deployment" "agent_deployment" {
   }
 
   triggers = {
-    redeploy = timestamp()
+    # redeploy = timestamp()
   }
 }
 
 resource "aws_api_gateway_stage" "agent_stage" {
   deployment_id = aws_api_gateway_deployment.agent_deployment.id
-  rest_api_id = aws_api_gateway_rest_api.agent_api.id
-  stage_name = "dev"
+  rest_api_id   = aws_api_gateway_rest_api.agent_api.id
+  stage_name    = "dev"
 }

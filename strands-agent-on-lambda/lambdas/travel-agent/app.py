@@ -9,23 +9,32 @@ l = logger.get()
 debug_token = "add-your-debug-jwt-here"
 
 JWT_SIGNATURE_SECRET = os.environ['JWT_SIGNATURE_SECRET'] # Used for signing tokens to MCP Servers
+AUTH0_JWKS_URL = os.environ['AUTH0_JWKS_URL']
+AUTH0_RESOURCE_SERVER_IDENTIFIER=os.environ['AUTH0_RESOURCE_SERVER_IDENTIFIER']
 
-COGNITO_JWKS_URL = os.environ['COGNITO_JWKS_URL']
-jwks_client = jwt.PyJWKClient(COGNITO_JWKS_URL)
+jwks_client = jwt.PyJWKClient(AUTH0_JWKS_URL)
 
 def get_jwt_claims(authorization_header):
     jwt_string = authorization_header.split(" ")[1]
-    # print(jwt_string)
+    print(f"jwt_string={jwt_string}")
+
     signing_key = jwks_client.get_signing_key_from_jwt(jwt_string)
-    claims = jwt.decode(jwt_string, signing_key.key, algorithms=["RS256"])
-    # print(claims)
+    print(f"signing_key={signing_key}")
+
+    claims = jwt.decode(
+        jwt_string, 
+        signing_key.key, 
+        algorithms=["RS256"],
+        audience=AUTH0_RESOURCE_SERVER_IDENTIFIER)
+    print(f"claims={claims}")
+
     return claims
 
 def handler(event: dict, ctx):
     l.info("> handler")
     try:
         claims = get_jwt_claims(event["headers"]["Authorization"])
-        user = User(id=claims["sub"], name=claims["username"])
+        user = User(id=claims["sub"], name=claims["sub"].split("|")[1])
         l.info(f"jwt parsed. user.id={user.id} user.name={user.name}")
     except Exception as e:
         l.error("failed to parse jwt: ", exc_info=True)

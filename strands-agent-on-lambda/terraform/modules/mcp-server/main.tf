@@ -112,7 +112,7 @@ resource "aws_api_gateway_deployment" "mcp_deployment" {
   }
 
   triggers = {
-    redeploy = timestamp()
+    # redeploy = timestamp()
   }
 }
 

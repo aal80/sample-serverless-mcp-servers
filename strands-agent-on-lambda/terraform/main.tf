@@ -3,8 +3,10 @@ locals {
   jwt_signature_secret = "jwt-signature-secret"
 }
 
-module "cognito" {
-  source = "./modules/cognito"
+module "auth0" {
+  source                     = "./modules/auth0"
+  auth0_domain               = var.auth0_domain
+  auth0_management_client_id = var.auth0_management_client_id
 }
 
 module "mcp_server" {
@@ -18,28 +20,30 @@ module "agent_dependencies" {
 }
 
 module "agent" {
-  source                   = "./modules/agent"
-  fn_architecture          = local.fn_architecture
-  fn_dependecies_layer_arn = module.agent_dependencies.dependencies_layer_arn
-  jwt_signature_secret     = local.jwt_signature_secret
-  mcp_endpoint             = module.mcp_server.mcp_endpoint
-  cognito_jwks_url         = module.cognito.cognito_jwks_url
+  source                           = "./modules/agent"
+  fn_architecture                  = local.fn_architecture
+  fn_dependecies_layer_arn         = module.agent_dependencies.dependencies_layer_arn
+  jwt_signature_secret             = local.jwt_signature_secret
+  auth0_jwks_url                   = module.auth0.jwks_url
+  auth0_resource_server_identifier = module.auth0.resource_server_identifier
+  mcp_endpoint                     = module.mcp_server.mcp_endpoint
 }
 
 
 output "outputs_map" {
   value = tomap({
-    cognito_userpool_id : module.cognito.cognito_user_pool_id,
-    cognito_client_id : module.cognito.cognito_client_id,
-    cognito_client_secret : module.cognito.cognito_client_secret,
-    cognito_jwks_url : module.cognito.cognito_jwks_url,
-    cognito_sign_in_url: module.cognito.cognito_sign_in_url,
-    cognito_logout_url: module.cognito.cognito_logout_url,
-    cognito_well_known_url: module.cognito.cognito_well_known_url,
+    auth0_client_id : module.auth0.client_id,
+    auth0_client_secret : module.auth0.client_secret,
+    auth0_connection_name: module.auth0.connection_name,
+    auth0_well_known_url : module.auth0.well_known_url,
+    auth0_jwks_url : module.auth0.jwks_url,
+    auth0_sign_in_url : module.auth0.sign_in_url,
+    auth0_logout_url : module.auth0.logout_url
+    auth0_resource_server_identifier : module.auth0.resource_server_identifier
     mcp_endpoint : module.mcp_server.mcp_endpoint,
     agent_endpoint : module.agent.agent_endpoint
   })
-  sensitive = true
+  # sensitive = true
 }
 
 

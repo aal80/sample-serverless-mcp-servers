@@ -18,7 +18,11 @@ variable "mcp_endpoint" {
   type        = string
 }
 
-variable "cognito_jwks_url" {
-  description = "JWKS URL for Cognito authentication"
+variable "auth0_jwks_url" {
+  description = "JWKS URL for Auth0 authentication"
   type        = string
+}
+
+variable "auth0_resource_server_identifier" {
+  type = string
 }
